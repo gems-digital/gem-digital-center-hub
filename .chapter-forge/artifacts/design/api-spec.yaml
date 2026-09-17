@@ -1,0 +1,273 @@
+openapi: 3.1.0
+info:
+  title: OmniGem Gallery — App API
+  version: 0.1.0-design
+  description: >
+    OpenAPI 3.1 contract for OmniGem Gallery's own server endpoints (Next.js Route Handlers).
+    Endpoints handle PII and are never edge-cached (Cache-Control: no-store).
+    All examples are SYNTHETIC — no real PII/PAN appears anywhere.
+    Compliance: Art. 11 consent (US-H2), Art. 9/10 DSR (US-H3), Art. 25 cross-border (chat → Anthropic).
+  x-pii-policy: "Fields marked x-pii=true are personal data under Decree 13/2023 (PDPD). No card data is processed (no PCI scope)."
+servers:
+  - url: https://www.omnigem.example/api
+    description: Production (placeholder host)
+tags:
+  - name: lead
+  - name: chat
+  - name: dsr
+  - name: analytics
+
+paths:
+  /lead:
+    post:
+      tags: [lead]
+      summary: Submit a lead / consultation request (US-C1)
+      description: Validates input, records Art. 11 consent atomically with the lead, persists to the encrypted lead store.
+      operationId: submitLead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LeadInput' }
+            examples:
+              synthetic:
+                value:
+                  name: "Nguyen Van Synthetic"
+                  contact: { phone: "+84900000000" }
+                  dob: "1990-01-01"
+                  productInterest: "Jade bangle for Moc element"
+                  productCode: "OMG-BANGLE-001"
+                  consent: { policyVersion: "pp-2026-01", granted: true }
+      responses:
+        '201':
+          description: Lead accepted
+          headers:
+            Cache-Control: { schema: { type: string, example: "no-store" } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LeadAccepted' }
+              examples: { synthetic: { value: { status: "accepted", leadId: "lead_synthetic_001" } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/OriginRejected' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/StoreUnavailable' }
+
+  /chat:
+    post:
+      tags: [chat]
+      summary: Process one chatbot turn (US-D1/D2/D3)
+      description: >
+        Runs the Claude tool-calling loop (search_products, handoff_to_zalo).
+        CROSS-BORDER (Art. 25): turn context is sent to Anthropic (Claude API).
+        Guardrails: never solicits Art. 2(4) sensitive data; grounds answers in live CMS; mandatory Zalo handoff on purchase intent.
+      operationId: chatTurn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChatInput' }
+            examples:
+              synthetic:
+                value:
+                  sessionToken: "eyJzaWQiOiJzZXNzX3N5bnRoZXRpYyJ9.SYNTHETIC_HMAC_SIGNATURE"
+                  consent: { policyVersion: "pp-2026-01", granted: true }
+                  userMessage: "I was born 1990-01-01, which jade suits me?"
+      responses:
+        '200':
+          description: Bot reply (may include a Zalo handoff link)
+          headers:
+            Cache-Control: { schema: { type: string, example: "no-store" } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatReply' }
+              examples:
+                recommendation:
+                  value:
+                    reply: "Your element is Moc. I recommend green jade bangles."
+                    products: [ { code: "OMG-BANGLE-001", name: "Green Jade Bangle" } ]
+                    handoff: null
+                    fallback: false
+                handoff:
+                  value:
+                    reply: "I'll connect you with our consultant on Zalo."
+                    products: []
+                    handoff: { zaloUrl: "https://zalo.me/oa/placeholder?ref=OMG-BANGLE-001" }
+                    fallback: false
+                degraded:
+                  value:
+                    reply: "Our assistant is busy — please chat with us on Zalo."
+                    products: []
+                    handoff: { zaloUrl: "https://zalo.me/oa/placeholder" }
+                    fallback: true
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/OriginRejected' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /dsr:
+    post:
+      tags: [dsr]
+      summary: Submit a data-subject-rights request (US-H3, Art. 9/10)
+      description: >
+        Logs the request, assigns an accountable owner, starts the acknowledgement SLA clock.
+        H-4: the identifier is self-asserted, so intake/ack are open, but NO disclosive
+        (access/inform) or mutating (erasure/rectify/restrict/withdraw_consent) action is fulfilled
+        until the requester proves control of the on-record channel via a one-time code
+        (status → pending_verification). Fulfilment then also passes the P5 maker-checker gate.
+      operationId: submitDsr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DsrInput' }
+            examples:
+              synthetic:
+                value:
+                  requestType: "erasure"
+                  identifier: { phone: "+84900000000" }
+                  details: "Please delete my consultation record."
+      responses:
+        '202':
+          description: DSR request received and queued for a human owner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DsrAccepted' }
+              examples: { synthetic: { value: { status: "received", dsrId: "dsr_synthetic_001", ackBy: "2026-01-04T00:00:00Z", verificationRequired: true } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /collect:
+    post:
+      tags: [analytics]
+      summary: Optional first-party analytics proxy (US-G1, hardening)
+      description: >
+        Server relay for named funnel events to reduce client-side identifier leakage and enforce consent-mode.
+        Carries NO direct PII — event name + product id only. Consent-gated.
+      operationId: collectEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnalyticsEvent' }
+            examples:
+              synthetic:
+                value: { event: "view_product", productId: "OMG-BANGLE-001", consentAnalytics: true }
+      responses:
+        '204': { description: Accepted (no content) }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+components:
+  responses:
+    ValidationError:
+      description: Input failed schema validation
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, examples: { v: { value: { error: "validation_failed", detail: "phone or zaloId required" } } } } }
+    OriginRejected:
+      description: Origin/CSRF check failed
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, examples: { v: { value: { error: "origin_rejected" } } } } }
+    RateLimited:
+      description: Too many requests (abuse/cost control)
+      headers: { Retry-After: { schema: { type: integer, example: 60 } } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, examples: { v: { value: { error: "rate_limited" } } } } }
+    StoreUnavailable:
+      description: Lead store temporarily unavailable — client should show Zalo fallback CTA
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, examples: { v: { value: { error: "store_unavailable", zaloUrl: "https://zalo.me/oa/placeholder" } } } } }
+
+  schemas:
+    LeadInput:
+      type: object
+      additionalProperties: false
+      required: [name, contact, consent]
+      properties:
+        name:        { type: string, minLength: 1, maxLength: 120, x-pii: true, description: "Lead full name (PII)" }
+        contact:
+          type: object
+          additionalProperties: false
+          properties:
+            phone:  { type: string, pattern: '^\\+?[0-9]{9,15}$', x-pii: true, description: "Phone (PII, contact channel)" }
+            zaloId: { type: string, maxLength: 120, x-pii: true, description: "Zalo ID (PII)" }
+          anyOf: [ { required: [phone] }, { required: [zaloId] } ]
+        dob:             { type: string, format: date, x-pii: true, description: "Date of birth — basic personal data, Art. 2(3). Consent required." }
+        productInterest: { type: string, maxLength: 500, x-pii: true, description: "Stated need (contextual PII)" }
+        productCode:     { type: string, maxLength: 40, description: "Product of interest (not PII)" }
+        consent:         { $ref: '#/components/schemas/ConsentAssertion' }
+    LeadAccepted:
+      type: object
+      properties: { status: { type: string, enum: [accepted] }, leadId: { type: string } }
+    ConsentAssertion:
+      type: object
+      additionalProperties: false
+      required: [policyVersion, granted]
+      description: Art. 11 — express consent tied to the exact privacy-notice version shown.
+      properties:
+        policyVersion: { type: string, description: "Version id of the Privacy Policy displayed" }
+        granted:       { type: boolean, const: true, description: "Must be explicitly true; unticked default is rejected" }
+    ChatInput:
+      type: object
+      additionalProperties: false
+      required: [sessionToken, consent, userMessage]
+      description: >
+        REVISED (H-2, H-3): the client sends ONLY the new user message plus a server-issued,
+        HMAC-signed session token — NEVER prior assistant turns (server holds authoritative state).
+        Consent is REQUIRED so no chat PII is ever processed without an Art. 11 record.
+      properties:
+        sessionToken:
+          type: string
+          maxLength: 512
+          description: "H-1: server-issued HMAC-signed session token (bound to bot-challenge result); client cannot forge or rotate it. Server derives the sessionId from it."
+        consent:
+          allOf:
+            - $ref: '#/components/schemas/ConsentAssertion'
+          description: "H-3: REQUIRED. A session-scoped ConsentRecord is written on the first PII-bearing turn before any processing/persistence."
+        userMessage:
+          type: string
+          maxLength: 4000
+          x-pii: true
+          description: "H-2: the single new user turn only. Server-side input scrubber (C-1/M-7) redacts Art. 2(4) sensitive content and Luhn-valid card-number strings BEFORE the cross-border Claude call. Never solicit sensitive data."
+    ChatReply:
+      type: object
+      properties:
+        reply:    { type: string }
+        products:
+          type: array
+          items: { type: object, properties: { code: { type: string }, name: { type: string } } }
+        handoff:
+          type: [object, "null"]
+          properties: { zaloUrl: { type: string, format: uri } }
+        fallback: { type: boolean, description: "true when Claude API degraded — Zalo CTA offered instead" }
+    DsrInput:
+      type: object
+      additionalProperties: false
+      required: [requestType, identifier]
+      properties:
+        requestType: { type: string, enum: [access, withdraw_consent, erasure, restrict, object, rectify, inform] }
+        identifier:
+          type: object
+          additionalProperties: false
+          minProperties: 1
+          properties:
+            phone:  { type: string, x-pii: true }
+            zaloId: { type: string, x-pii: true }
+            email:  { type: string, format: email, x-pii: true }
+        details: { type: string, maxLength: 2000, x-pii: true }
+    DsrAccepted:
+      type: object
+      properties:
+        status: { type: string, enum: [received], description: "Intake only. Fulfilment requires status to advance to pending_verification → verified (H-4) then maker-checker approval." }
+        dsrId:  { type: string }
+        ackBy:  { type: string, format: date-time, description: "Acknowledgement SLA deadline (US-H3 AC2)" }
+        verificationRequired:
+          type: boolean
+          description: "H-4: true for access/inform/erasure/rectify/restrict/withdraw_consent — a one-time code is sent to the on-record channel before fulfilment."
+    AnalyticsEvent:
+      type: object
+      additionalProperties: false
+      required: [event, consentAnalytics]
+      properties:
+        event:            { type: string, enum: [view_product, click_zalo, submit_lead_form, chatbot_handoff] }
+        productId:        { type: string, description: "Not PII" }
+        consentAnalytics: { type: boolean, description: "Must be true or event is dropped" }
+    Error:
+      type: object
+      properties:
+        error:   { type: string }
+        detail:  { type: string }
+        zaloUrl: { type: string, format: uri }
