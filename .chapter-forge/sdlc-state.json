@@ -1,0 +1,69 @@
+{
+  "project": "gem-digital-center-hub",
+  "product": "OmniGem Gallery",
+  "version": "0.1.0",
+  "current_phase": "design",
+  "phase_status": "review_complete",
+  "pending_gate": "G1",
+  "gate_status": "awaiting_human_signoff",
+  "next_phase": "plan",
+  "next_command": "/chapter-forge:sdlc-plan",
+  "updated": "2026-09-17T11:00:00Z",
+  "gates": {
+    "G0": {
+      "status": "approved",
+      "approved_by": ["Product Owner", "Risk/Compliance"],
+      "approved_at": "2026-09-17T10:36:23Z",
+      "basis": "Business case confirmed; no legal blockers; all 5 G0 criteria met"
+    },
+    "G1": {
+      "status": "awaiting_human_signoff",
+      "approver_roles": ["Architect", "Security"],
+      "evidence_complete": true,
+      "convergence": "1 loop iteration; 1 CRITICAL + 4 HIGH raised, all FIXED and re-verified by both reviewers; 0 unresolved CRITICAL/HIGH",
+      "pci_boundary": "clean — no card data anywhere in design"
+    }
+  },
+  "artifacts": {
+    "discover": {
+      "PRD": ".chapter-forge/artifacts/discover/PRD.md",
+      "data_classification": ".chapter-forge/artifacts/discover/data-classification.md",
+      "risk_register": ".chapter-forge/artifacts/discover/risk-register.md",
+      "compliance_scope": ".chapter-forge/artifacts/discover/compliance-scope.md"
+    },
+    "design": {
+      "system_context": ".chapter-forge/artifacts/design/system-context.md",
+      "nfr_targets": ".chapter-forge/artifacts/design/nfr-targets.md",
+      "hld_lld": ".chapter-forge/artifacts/design/hld-lld.md",
+      "api_spec": ".chapter-forge/artifacts/design/api-spec.yaml",
+      "erd": ".chapter-forge/artifacts/design/erd.md",
+      "class_diagram": ".chapter-forge/artifacts/design/class-diagram.md",
+      "adrs": ".chapter-forge/artifacts/design/adr/",
+      "threat_model": ".chapter-forge/artifacts/design/threat-model.md",
+      "security_review": ".chapter-forge/artifacts/design/security-review.md",
+      "design_walkthrough": ".chapter-forge/artifacts/design/design-walkthrough.md",
+      "gate_g1_checklist": ".chapter-forge/artifacts/design/gate-g1-checklist.md"
+    }
+  },
+  "compliance": {
+    "classification": "PII in scope; no card/PCI data on-web",
+    "scope": {
+      "PDPD_decree_13_2023": "in_scope",
+      "PCI_DSS_v4": "out_of_scope",
+      "SBV_TT09_2020": "not_applicable",
+      "ISO_27001": "optional"
+    },
+    "carried_obligations": [
+      "Art. 11 consent record (reproducible; atomic for both lead-form and chatbot paths) — designed",
+      "Art. 24 DPIA dossier (R-12) — owner TBD, due before go-live",
+      "Art. 25 cross-border transfer assessment for Vercel/Cloudinary/Anthropic/Postgres-region (R-04) — owner TBD, due before go-live",
+      "Anthropic no-training/zero-retention DPA — blocking go-live prerequisite (ADR-0003)"
+    ]
+  },
+  "open_items_to_plan_phase": [
+    "M-5 supply-chain/SCA gate — enforce at P4 CI",
+    "DPO/staff IdP + MFA authentication channel — finalize at P4 build",
+    "Cost-ceiling amount — Product Owner to set (enforcement mechanism is firm)",
+    "Postgres region/DPA selection — confirm to keep Art. 25 scope bounded"
+  ]
+}
