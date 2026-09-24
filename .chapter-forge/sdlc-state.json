@@ -3,12 +3,12 @@
   "product": "OmniGem Gallery",
   "version": "0.1.0",
   "current_phase": "design",
-  "phase_status": "review_complete",
-  "pending_gate": "G1",
-  "gate_status": "awaiting_human_signoff",
+  "phase_status": "complete",
+  "pending_gate": null,
+  "gate_status": "G1_approved",
   "next_phase": "plan",
   "next_command": "/chapter-forge:sdlc-plan",
-  "updated": "2026-09-17T11:00:00Z",
+  "updated": "2026-09-24T14:00:02Z",
   "gates": {
     "G0": {
       "status": "approved",
@@ -17,8 +17,9 @@
       "basis": "Business case confirmed; no legal blockers; all 5 G0 criteria met"
     },
     "G1": {
-      "status": "awaiting_human_signoff",
-      "approver_roles": ["Architect", "Security"],
+      "status": "approved",
+      "approved_by": ["Architect", "Security"],
+      "approved_at": "2026-09-24T14:00:02Z",
       "evidence_complete": true,
       "convergence": "1 loop iteration; 1 CRITICAL + 4 HIGH raised, all FIXED and re-verified by both reviewers; 0 unresolved CRITICAL/HIGH",
       "pci_boundary": "clean — no card data anywhere in design"
