@@ -1,0 +1,315 @@
+<title>Phễu Marketing Vòng Ngọc</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f1e8;
+    --surface: #fffdf8;
+    --ink: #22271f;
+    --ink-soft: #5c6356;
+    --line: #e2dccb;
+    --jade: #2f7d5e;
+    --jade-deep: #1f5a42;
+    --jade-soft: #e4efe7;
+    --gold: #b8893b;
+    --gold-soft: #f6ead2;
+    --shadow: 0 1px 2px rgba(34,39,31,.06), 0 8px 24px rgba(34,39,31,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #14170f;
+      --surface: #1d2117;
+      --ink: #eef0e6;
+      --ink-soft: #a7ac9c;
+      --line: #333a2a;
+      --jade: #6cc49a;
+      --jade-deep: #a6ddc2;
+      --jade-soft: #223228;
+      --gold: #e0b063;
+      --gold-soft: #2e2817;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #14170f;
+    --surface: #1d2117;
+    --ink: #eef0e6;
+    --ink-soft: #a7ac9c;
+    --line: #333a2a;
+    --jade: #6cc49a;
+    --jade-deep: #a6ddc2;
+    --jade-soft: #223228;
+    --gold: #e0b063;
+    --gold-soft: #2e2817;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 56px;
+  }
+
+  /* ---- Header ---- */
+  header { text-align: center; margin-bottom: 36px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--jade); font-weight: 600; margin: 0 0 10px;
+  }
+  h1 {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 700; font-size: clamp(30px, 7vw, 46px);
+    line-height: 1.08; margin: 0 0 14px; text-wrap: balance;
+    color: var(--ink);
+  }
+  .lede {
+    max-width: 48ch; margin: 0 auto; color: var(--ink-soft);
+    font-size: 15px;
+  }
+  .lede b { color: var(--jade-deep); font-weight: 600; }
+
+  /* ---- Feeder: 5 content pillars ---- */
+  .feeder {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .feeder-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600; margin-bottom: 12px;
+  }
+  .feeder-label .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--jade); flex: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: var(--jade-soft); color: var(--jade-deep);
+    border: 1px solid transparent;
+    font-size: 13px; font-weight: 500;
+    padding: 6px 12px; border-radius: 999px;
+  }
+
+  /* ---- Connector arrow ---- */
+  .arrow {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; padding: 8px 0; color: var(--line);
+  }
+  .arrow svg { width: 22px; height: 22px; display: block; color: var(--jade); opacity: .75; }
+
+  /* ---- Stage cards ---- */
+  .stage {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .badge {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--jade); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Playfair Display", serif; font-size: 24px; font-weight: 700;
+    flex: none;
+  }
+  .stage-body { min-width: 0; }
+  .stage-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 6px; }
+  .stage-name {
+    font-family: "Playfair Display", serif;
+    font-size: 21px; font-weight: 700; margin: 0; color: var(--ink);
+  }
+  .channel {
+    font-size: 12px; font-weight: 600; letter-spacing: .04em;
+    color: var(--jade-deep); background: var(--jade-soft);
+    padding: 3px 9px; border-radius: 6px;
+  }
+  .plain { margin: 0 0 10px; font-size: 15.5px; color: var(--ink); }
+  .how {
+    margin: 0; font-size: 13.5px; color: var(--ink-soft);
+    padding-left: 14px; border-left: 2px solid var(--line);
+  }
+  .how b { color: var(--ink); font-weight: 600; }
+
+  /* ---- Goal stage highlight ---- */
+  .stage.goal {
+    border-color: var(--gold);
+    border-width: 1.5px;
+    background: linear-gradient(180deg, var(--gold-soft), var(--surface) 60%);
+  }
+  .stage.goal .badge { background: var(--gold); }
+  .ribbon {
+    position: absolute; top: -11px; right: 16px;
+    background: var(--gold); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    padding: 4px 11px; border-radius: 999px;
+    display: flex; align-items: center; gap: 5px;
+    box-shadow: var(--shadow);
+  }
+  .stage.goal .channel { color: var(--gold); background: var(--gold-soft); }
+
+  /* ---- KPI strip ---- */
+  .kpi-head {
+    text-align: center; margin: 40px 0 16px;
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600;
+  }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 12px; text-align: center;
+  }
+  .kpi .num {
+    font-family: "Playfair Display", serif; font-weight: 700;
+    font-size: 24px; color: var(--jade); line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi .lbl { font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.3; }
+
+  .footnote {
+    margin-top: 28px; font-size: 13px; color: var(--ink-soft);
+    text-align: center; border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  .footnote b { color: var(--jade-deep); }
+
+  @media (max-width: 480px) {
+    .stage { grid-template-columns: 44px 1fr; gap: 12px; padding: 18px 16px; }
+    .badge { width: 44px; height: 44px; font-size: 20px; border-radius: 12px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .ribbon { right: 12px; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">OmniGem · Chiến lược vòng ngọc</p>
+    <h1>Phễu Marketing Vòng Ngọc</h1>
+    <p class="lede">Người lạ thấy → tin là ngọc thật → <b>nhắn tin để lại thông tin</b> → người thật chốt đơn → nhận hàng &amp; quay lại. Ngân sách 0đ, content tự quay tại shop.</p>
+  </header>
+
+  <!-- Feeder -->
+  <div class="feeder">
+    <div class="feeder-label"><span class="dot"></span>5 trụ content — quay bằng điện thoại tại shop, xoay vòng mãi</div>
+    <div class="chips">
+      <span class="chip">Soi vân / thử thật–giả</span>
+      <span class="chip">Mệnh X hợp vòng nào</span>
+      <span class="chip">Feedback khách thật</span>
+      <span class="chip">Hậu trường (chị Trang)</span>
+      <span class="chip">Giá &amp; minh bạch</span>
+    </div>
+  </div>
+
+  <div class="arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Stage 1 -->
+  <section class="stage">
+    <div class="badge">1</div>
+    <div class="stage-body">
+      <div class="stage-top">
+        <h2 class="stage-name">Thu hút</h2>
+        <span class="channel">TikTok (chính) · FB/IG</span>
+      </div>
+      <p class="plain">Cho người lạ nhìn thấy và tò mò về vòng ngọc.</p>
+      <p class="how"><b>Cơ chế:</b> video ngắn 15–40s lên xu hướng → kéo người xem về trang / bình luận. TikTok là cửa reach free mạnh nhất.</p>
+    </div>
+  </section>
+
+  <div class="arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Stage 2 -->
+  <section class="stage">
+    <div class="badge">2</div>
+    <div class="stage-body">
+      <div class="stage-top">
+        <h2 class="stage-name">Tạo niềm tin</h2>
+        <span class="channel">Facebook Page · Livestream</span>
+      </div>
+      <p class="plain">Khiến người xem tin đây là ngọc thật, mua yên tâm.</p>
+      <p class="how"><b>Bằng chứng:</b> soi vân dưới ánh sáng · giấy kiểm định · feedback khách · đổi trả 7 ngày, thay dây trọn đời.</p>
+    </div>
+  </section>
+
+  <div class="arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Stage 3 — GOAL -->
+  <section class="stage goal">
+    <div class="ribbon">★ MỤC TIÊU</div>
+    <div class="badge">3</div>
+    <div class="stage-body">
+      <div class="stage-top">
+        <h2 class="stage-name">Gom lead</h2>
+        <span class="channel">Messenger · Lead form</span>
+      </div>
+      <p class="plain">Biến người xem thành khách có liên hệ — đây là đích của giai đoạn này.</p>
+      <p class="how"><b>Mồi inbox:</b> "nhắn <b>ngày sinh</b> tư vấn vòng hợp mệnh" · comment từ khoá → auto inbox · link <b>m.me?ref=mã SP</b>. Lead = để lại ngày sinh / SĐT / mã SP (có đồng ý — NĐ 13/2023).</p>
+    </div>
+  </section>
+
+  <div class="arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Stage 4 -->
+  <section class="stage">
+    <div class="badge">4</div>
+    <div class="stage-body">
+      <div class="stage-top">
+        <h2 class="stage-name">Chốt bằng người thật</h2>
+        <span class="channel">Chị Trang · Messenger/Zalo</span>
+      </div>
+      <p class="plain">Con người tư vấn &amp; chốt đơn — không phải web tự bán.</p>
+      <p class="how"><b>Hành động:</b> tư vấn hợp mệnh theo ngày sinh · báo giá 500k–5tr · chốt COD / đặt cọc.</p>
+    </div>
+  </section>
+
+  <div class="arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Stage 5 -->
+  <section class="stage">
+    <div class="badge">5</div>
+    <div class="stage-body">
+      <div class="stage-top">
+        <h2 class="stage-name">Nhận hàng &amp; chăm sóc</h2>
+        <span class="channel">Cửa hàng (O2O) · Remarketing</span>
+      </div>
+      <p class="plain">Khách ghé shop xem tận tay hoặc ship, rồi quay lại mua tiếp.</p>
+      <p class="how"><b>Vòng lặp:</b> xem hàng tại shop → giao hàng → chăm sóc lại để mua lần sau &amp; giới thiệu bạn bè.</p>
+    </div>
+  </section>
+
+  <!-- KPI -->
+  <p class="kpi-head">Thước đo 30 ngày đầu (ngân sách 0đ)</p>
+  <div class="kpis">
+    <div class="kpi"><div class="num">30–50</div><div class="lbl">lead / tháng</div></div>
+    <div class="kpi"><div class="num">40%</div><div class="lbl">video &gt; 1.000 view</div></div>
+    <div class="kpi"><div class="num">↑</div><div class="lbl">inbox tăng tuần/tuần</div></div>
+    <div class="kpi"><div class="num">20%</div><div class="lbl">lead ghé shop / giữ hàng</div></div>
+  </div>
+
+  <p class="footnote">Nguyên tắc xuyên suốt: <b>web/social là showroom tạo niềm tin, con người chốt đơn trong chat.</b> Giai đoạn này đo bằng số lead, chưa đặt KPI doanh thu.</p>
+</div>
