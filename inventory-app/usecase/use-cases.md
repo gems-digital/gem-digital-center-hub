@@ -1,6 +1,6 @@
 # OmniGem Kho & Giá — Tài liệu Use Case
 
-Trạng thái: **DRAFT** — 2026-10-21. Nguồn: `inventory-app/prd/PRD.md` (Epic A, B, C).
+Trạng thái: **DRAFT** — 2026-10-21 (cập nhật 2026-10-25: UC-06 ẩn món / xóa mềm, mở quyền staff). Nguồn: `inventory-app/prd/PRD.md` (Epic A, B, C).
 Mục đích: cái nhìn tổng quan *ai (actor) làm gì (use case)* với app nội bộ, phân rã use case lớn → use case con, kèm quan hệ `«include»` (bắt buộc) / `«extend»` (có điều kiện).
 
 > Ghi chú: Mermaid không có sơ đồ UML use-case riêng — ở đây mô phỏng bằng `flowchart`: actor là hình tròn, use case là hình bo tròn, use case con màu cam.
@@ -49,12 +49,12 @@ flowchart TB
       uc_detail(["UC-03<br/>Xem chi tiết món"]):::uc
       uc_add(["UC-04<br/>Thêm món"]):::uc
       uc_edit(["UC-05<br/>Sửa món"]):::uc
-      uc_del(["UC-06<br/>Xóa / ẩn món"]):::uc
+      uc_del(["UC-06<br/>Ẩn món (xóa mềm)"]):::uc
       uc_user(["UC-07<br/>Quản lý người dùng"]):::uc
       uc_rbac(["UC-08<br/>Kiểm tra quyền (RBAC) — cross-cutting"]):::ucx
     end
 
-    staff --> uc_auth & uc_list & uc_detail & uc_add & uc_edit
+    staff --> uc_auth & uc_list & uc_detail & uc_add & uc_edit & uc_del
     owner --> uc_auth & uc_list & uc_detail & uc_add & uc_edit & uc_del & uc_user
 
     uc_add -. "upload ảnh" .-> cloud
@@ -73,7 +73,7 @@ flowchart TB
     classDef ucx fill:#ede7f6,stroke:#6a1b9a,stroke-dasharray:4 3;
 ```
 
-**Đọc sơ đồ:** actor nằm ngoài boundary. UC-08 (RBAC) vẽ nét đứt vì là chức năng cross-cutting, `«include»` vào mọi use case đọc/ghi. Cloudinary là hệ thống ngoài cho ảnh. `staff` và `owner` dùng chung phần lớn use case; chỉ UC-06 (xóa) và UC-07 (quản lý user) giới hạn `admin`.
+**Đọc sơ đồ:** actor nằm ngoài boundary. UC-08 (RBAC) vẽ nét đứt vì là chức năng cross-cutting, `«include»` vào mọi use case đọc/ghi. Cloudinary là hệ thống ngoài cho ảnh. `staff` và `owner` dùng chung phần lớn use case — **gồm cả UC-06 (ẩn món / xóa mềm)**, vì thao tác an toàn & hoàn tác được; chỉ **UC-07 (quản lý user)** còn giới hạn `admin`. (Xóa cứng vĩnh viễn — nếu làm ở bản sau — mới giới hạn `admin`.)
 
 ---
 
@@ -161,22 +161,47 @@ flowchart TB
     classDef inc fill:#e8f5e9,stroke:#2e7d32;
 ```
 
-### UC-06..07 — Xóa món & Quản lý người dùng (chỉ admin)
+### UC-06 — Ẩn món (xóa mềm) — staff + admin
+
+```mermaid
+flowchart TB
+    s(("Chị Trang<br/>/ Owner")):::actor
+    subgraph G4a["Ẩn món (soft delete)"]
+      u6(["UC-06 Ẩn món"]):::uc
+      u61(["UC-06.1 Vuốt trái thẻ món<br/>→ lộ hành vi Ẩn"]):::sub
+      u62(["UC-06.2 Xác nhận ẩn<br/>(hộp thoại nêu hệ quả)"]):::sub
+      u63(["UC-06.3 Đánh dấu deleted_at/deleted_by<br/>(KHÔNG xóa cứng, giữ ảnh)"]):::sub
+      u64(["UC-06.4 Ẩn khỏi danh sách & chi tiết<br/>(đọc lọc deleted_at IS NULL)"]):::sub
+      u65(["UC-06.5 Hoàn tác qua snackbar<br/>→ gỡ deleted_at (restore)"]):::sub
+    end
+    rbac(["«include» Kiểm tra quyền (đã đăng nhập)"]):::inc
+    s --> u6
+    u6 --> u61 & u63 & u64
+    u61 -. include .-> u62
+    u6 -. extend .-> u65
+    u6 -. include .-> rbac
+    classDef actor fill:#e3f2fd,stroke:#1565c0;
+    classDef uc fill:#f3e5f5,stroke:#6a1b9a;
+    classDef sub fill:#fff3e0,stroke:#ef6c00;
+    classDef inc fill:#e8f5e9,stroke:#2e7d32;
+```
+
+> **Backlog (non-MVP):** màn "Món đã ẩn" cho phép xem lại + khôi phục, và **xóa cứng vĩnh viễn** (chỉ `admin`, kèm dọn ảnh Cloudinary). Chưa thuộc phạm vi bản này.
+
+### UC-07 — Quản lý người dùng (chỉ admin)
 
 ```mermaid
 flowchart TB
     o(("Owner<br/>(admin)")):::actor
-    subgraph G4["Quản trị"]
-      u6(["UC-06 Xóa / ẩn món"]):::uc
+    subgraph G4b["Quản trị"]
       u7(["UC-07 Quản lý người dùng"]):::uc
       u71(["UC-07.1 Tạo tài khoản staff"]):::sub
       u72(["UC-07.2 Đổi vai trò / mật khẩu"]):::sub
       u73(["UC-07.3 Vô hiệu hóa tài khoản"]):::sub
     end
     rbac(["«include» Kiểm tra quyền admin"]):::inc
-    o --> u6 & u7
+    o --> u7
     u7 --> u71 & u72 & u73
-    u6 -. include .-> rbac
     u7 -. include .-> rbac
     classDef actor fill:#e3f2fd,stroke:#1565c0;
     classDef uc fill:#f3e5f5,stroke:#6a1b9a;
@@ -195,7 +220,7 @@ flowchart TB
 | UC-03 | Xem chi tiết món | staff, admin | US-B5, US-C1 |
 | UC-04 | Thêm món | staff, admin | US-B1 |
 | UC-05 | Sửa món | staff, admin | US-B2 |
-| UC-06 | Xóa / ẩn món | admin | US-B3 |
+| UC-06 | Ẩn món (xóa mềm) | staff, admin | US-B3 |
 | UC-07 | Quản lý người dùng | admin | US-A2 |
 | UC-08 | Kiểm tra quyền (RBAC) — cross-cutting | (hệ thống) | US-A2 |
 
@@ -204,3 +229,4 @@ flowchart TB
 - **UC-08 (RBAC)** là cross-cutting: không phải màn hình riêng, mà là guard `«include»` ở mọi endpoint đọc/ghi (middleware ở backend + ẩn/hiện thao tác ở app).
 - **Tính margin** luôn ở tầng đọc (lúc hiển thị), không lưu trong DB — nhất quán với PRD §6.
 - Phần **mô phỏng giảm giá tự động** là Non-Goal (PRD NG1); owner tự đọc giá sàn vs giá bán.
+- **UC-06 là xóa mềm** (`deleted_at`): mọi truy vấn đọc (UC-02/03) `«include»` ngầm điều kiện `deleted_at IS NULL`. Ẩn giữ nguyên ảnh Cloudinary và `product_id`; hoàn tác qua snackbar (UC-06.5). Quyết định Q4 chốt 2026-10-25 — xem `docs/superpowers/specs/2026-10-25-inventory-soft-delete-design.md`.

@@ -69,8 +69,8 @@ Hiện chỉ có **chị Trang** (nhân viên cửa hàng) nắm các con số n
 
 **US-A2 — Phân quyền theo vai trò (RBAC)**
 - AC1: 2 vai trò `staff` và `admin`.
-- AC2: `staff` tạo/sửa/xem món (⚠️ xem giả định §3.1); `admin` làm tất cả + quản lý user.
-- AC3: Chỉ `admin` tạo/sửa/xóa tài khoản người dùng.
+- AC2: `staff` tạo/sửa/xem/ẩn món (ẩn = soft delete, có hoàn tác — xem US-B3; ⚠️ xem giả định §3.1); `admin` làm tất cả + quản lý user.
+- AC3: Chỉ `admin` tạo/sửa/xóa tài khoản người dùng; xóa cứng món (nếu có, backlog) cũng chỉ `admin`.
 
 ### Epic B — Quản lý món hàng (CRUD)
 
@@ -85,8 +85,15 @@ Hiện chỉ có **chị Trang** (nhân viên cửa hàng) nắm các con số n
 - AC1: Sửa được mọi trường của một món; cập nhật `updated_by`, `updated_at`.
 - AC2: Đổi mã sang mã đã tồn tại → báo lỗi.
 
-**US-B3 — Xóa / ẩn món**
-- AC1: Xóa (hoặc đánh dấu ẩn) một món; chỉ `admin` (hoặc theo quyết định PO).
+**US-B3 — Ẩn món (xóa mềm)**
+- AC1: Ẩn một món là **xóa mềm** (soft delete): đánh dấu `deleted_at`/`deleted_by`, KHÔNG xóa cứng khỏi DB. Bản ghi, ảnh và audit được giữ nguyên (quyết định Q4).
+- AC2: Cả `staff` lẫn `admin` đều ẩn được món, vì thao tác an toàn và hoàn tác được (nới so với bản thảo cũ "chỉ admin").
+- AC3: Món đã ẩn KHÔNG xuất hiện ở danh sách (US-B4) và không mở được ở chi tiết (US-B5) qua đường thường; mặc định mọi truy vấn đọc lọc `deleted_at IS NULL`.
+- AC4: Cử chỉ: **vuốt trái thẻ món** để lộ hành vi Ẩn → **hộp thoại xác nhận** nêu rõ hệ quả → ẩn.
+- AC5: Sau khi ẩn hiện **snackbar có nút HOÀN TÁC** trong vài giây; bấm hoàn tác → gỡ `deleted_at` (khôi phục). Hết thời gian snackbar vẫn chỉ là soft delete (chưa có màn khôi phục riêng ở MVP).
+- AC6: Soft delete KHÔNG đụng tới ảnh Cloudinary (giữ nguyên để khôi phục chính xác).
+- AC7: Quan hệ `product_id` → `PRODUCT` public không bị phá khi ẩn.
+- AC8 *(non-MVP, backlog):* màn "Món đã ẩn" cho phép xem lại + khôi phục; xóa cứng vĩnh viễn (chỉ `admin`).
 
 **US-B4 — Danh sách & tìm/lọc (màn hình chính)**
 - AC1: Hiển thị danh sách dạng thẻ/hàng: ảnh, mã, tên, loại SP, đặc điểm, số lượng, **giá bán, giá sàn, margin**.
@@ -127,21 +134,25 @@ Bảng chính `inventory_item`:
 | product_id | uuid nullable | map tới `PRODUCT` public (để sau) |
 | created_at / updated_at | timestamptz | |
 | created_by / updated_by | uuid → app_user | audit |
+| **deleted_at** | timestamptz nullable | **soft delete: NULL = đang hiện; có giá trị = đã ẩn** (US-B3) |
+| **deleted_by** | uuid → app_user nullable | ai đã ẩn món (audit) |
 
 Bảng `app_user`: `id uuid PK`, `username text UNIQUE`, `password_hash text`, `role enum staff|admin`, `created_at`.
 
 Ghi chú:
 - Giá VND dùng `bigint` (đơn vị đồng), tránh số thập phân.
 - `margin` KHÔNG lưu — tính lúc đọc (tránh dữ liệu trùng/lệch, giữ immutability).
+- **Soft delete qua `deleted_at`**: mọi truy vấn đọc mặc định lọc `deleted_at IS NULL`. Nên có partial index `WHERE deleted_at IS NULL` để list nhanh. Ràng buộc `code UNIQUE` cân nhắc là partial unique (`WHERE deleted_at IS NULL`) nếu muốn tái dùng mã sau khi ẩn — mặc định MVP giữ UNIQUE toàn cục cho đơn giản.
 
 ## 7. API (REST — sẽ thành module `inventory-pricing` của `omnigem-api`)
 
 - `POST /auth/login` → JWT.
-- `GET /inventory/items` — list; query: `product_type`, `menh`, `q` (search code/name); trả margin tính sẵn.
-- `GET /inventory/items/:id`
+- `GET /inventory/items` — list; query: `product_type`, `menh`, `q` (search code/name); **mặc định chỉ trả món `deleted_at IS NULL`**; trả margin tính sẵn.
+- `GET /inventory/items/:id` — món đã ẩn → `404` (coi như không tồn tại qua đường thường).
 - `POST /inventory/items` — tạo (validate schema, vd Zod).
 - `PATCH /inventory/items/:id` — sửa.
-- `DELETE /inventory/items/:id` — xóa/ẩn.
+- `DELETE /inventory/items/:id` — **soft delete**: set `deleted_at = now()`, `deleted_by = <user>`; staff + admin đều gọi được; idempotent (ẩn món đã ẩn → vẫn `200/204`).
+- `POST /inventory/items/:id/restore` — **hoàn tác**: gỡ `deleted_at`/`deleted_by`; phục vụ nút HOÀN TÁC của snackbar.
 - `POST /inventory/photos/sign` — trả Cloudinary signature cho client upload trực tiếp.
 - `GET/POST/PATCH/DELETE /users` — quản lý user (admin).
 - Response theo envelope nhất quán: `{ success, data, error }`.
@@ -163,8 +174,8 @@ Ghi chú:
 
 ## 10. Kiểm thử
 
-- **Unit:** logic margin, validate schema, RBAC guard.
-- **Integration:** CRUD + auth trên Postgres (testcontainer).
+- **Unit:** logic margin, validate schema, RBAC guard, soft-delete filter (list/detail bỏ `deleted_at IS NOT NULL`).
+- **Integration:** CRUD + auth trên Postgres (testcontainer); soft delete → món biến khỏi list & chi tiết 404; restore → món hiện lại; DELETE idempotent.
 - **Coverage mục tiêu ≥ 80%** (theo rule chung).
 
 ## 11. Câu hỏi mở / Giả định chờ PO xác nhận
@@ -172,7 +183,7 @@ Ghi chú:
 - **Q1 (⚠️):** Owner dùng chính app Android để xem (mặc định) hay cần web read-only riêng?
 - **Q2 (⚠️):** Ảnh dùng Cloudinary (mặc định) hay S3/khác?
 - **Q3 (⚠️):** Quyền `staff`: chị Trang xem + sửa tất cả (mặc định) hay chỉ nhập, không xem giá của món người khác?
-- **Q4:** Có cần xóa mềm (ẩn) thay vì xóa cứng để giữ vết không?
+- **Q4 — ĐÃ CHỐT (2026-10-25):** Dùng **xóa mềm** (`deleted_at`), KHÔNG xóa cứng ở MVP; cả staff + admin ẩn được; hoàn tác qua snackbar; màn khôi phục + xóa cứng là backlog. Xem US-B3 và `docs/superpowers/specs/2026-10-25-inventory-soft-delete-design.md`.
 - **Q5:** `omnigem-api` sẽ là Node thật chứ (ảnh hưởng mức độ "zero-port")?
 
 ## 12. Bước tiếp theo
